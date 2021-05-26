@@ -1,0 +1,4 @@
+version: v1beta1
+name: buf.build/service-template/protos
+deps:
+  - buf.build/beta/googleapis

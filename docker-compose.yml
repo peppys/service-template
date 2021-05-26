@@ -1,0 +1,13 @@
+version: '3'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./infra/dev/.
+    ports:
+      - '8080:8080'
+    working_dir: /opt/app
+    volumes:
+      - ./cmd:/opt/app/cmd
+      - ./gen:/opt/app/gen
+      - ./internal:/opt/app/internal

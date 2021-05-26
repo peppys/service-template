@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package template.hello;
+
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "todo/";
+
+service TodoService {
+  rpc ListAll(google.protobuf.Empty) returns (ListAllResponse) {
+    option (google.api.http) = {
+      get: "/todos"
+    };
+  }
+
+  rpc Create(CreateRequest) returns (Todo) {
+    option (google.api.http) = {
+      post: "/todos"
+      body: "*"
+    };
+  }
+
+  rpc Get(GetRequest) returns (Todo) {
+    option (google.api.http) = {
+      get: "/todos/{id}"
+    };
+  }
+}
+
+message ListAllResponse {
+  repeated Todo todos = 1;
+}
+
+message CreateRequest {
+  string text = 1;
+  string author = 2;
+}
+
+message GetRequest {
+  string id = 1;
+}
+
+message Todo {
+  string id = 1;
+  string text = 2;
+  string author = 3;
+  string timestamp = 4;
+}
