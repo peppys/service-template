@@ -2,11 +2,11 @@
 // source: proto/todo.proto
 
 /*
-Package todo is a reverse proxy.
+Package proto is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package todo
+package proto
 
 import (
 	"context"
@@ -148,7 +148,7 @@ func RegisterTodoServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/template.hello.TodoService/ListAll")
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/template.TodoService/ListAll")
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -171,7 +171,7 @@ func RegisterTodoServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/template.hello.TodoService/Create")
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/template.TodoService/Create")
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -194,7 +194,7 @@ func RegisterTodoServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/template.hello.TodoService/Get")
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/template.TodoService/Get")
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -256,7 +256,7 @@ func RegisterTodoServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/template.hello.TodoService/ListAll")
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/template.TodoService/ListAll")
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -276,7 +276,7 @@ func RegisterTodoServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/template.hello.TodoService/Create")
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/template.TodoService/Create")
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -296,7 +296,7 @@ func RegisterTodoServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/template.hello.TodoService/Get")
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/template.TodoService/Get")
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return

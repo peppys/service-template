@@ -11,3 +11,5 @@ services:
       - ./cmd:/opt/app/cmd
       - ./gen:/opt/app/gen
       - ./internal:/opt/app/internal
+      - ./go.mod:/opt/app/go.mod
+      - ./go.sum:/opt/app/go.sum

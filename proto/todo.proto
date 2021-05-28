@@ -1,12 +1,12 @@
 syntax = "proto3";
 
-package template.hello;
+package template;
 
 import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 
-option go_package = "todo/";
+option go_package = "proto/";
 
 service TodoService {
   rpc ListAll(google.protobuf.Empty) returns (ListAllResponse) {
