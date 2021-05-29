@@ -11,3 +11,6 @@ services:
       - ./cmd:/opt/app/cmd
       - ./gen:/opt/app/gen
       - ./internal:/opt/app/internal
+      - ./swagger-ui:/opt/app/swagger-ui
+      - ./go.mod:/opt/app/go.mod
+      - ./go.sum:/opt/app/go.sum

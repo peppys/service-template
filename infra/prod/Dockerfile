@@ -9,6 +9,7 @@ RUN go mod download
 COPY cmd ./cmd
 COPY gen ./gen
 COPY internal ./internal
+COPY swagger-ui ./swagger-ui
 
 RUN go build -o /bin/api cmd/api.go
 

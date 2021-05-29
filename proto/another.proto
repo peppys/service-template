@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package template;
+
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "proto/";
+
+service AnotherService {
+  rpc ListAll(google.protobuf.Empty) returns (ListAllAnotherResponse) {
+    option (google.api.http) = {
+      get: "/anothers"
+    };
+  }
+
+  rpc Create(CreateAnotherRequest) returns (Another) {
+    option (google.api.http) = {
+      post: "/anothers"
+      body: "*"
+    };
+  }
+
+  rpc Get(GetAnotherRequest) returns (Another) {
+    option (google.api.http) = {
+      get: "/anothers/{id}"
+    };
+  }
+}
+
+message ListAllAnotherResponse {
+  repeated Another anothers = 1;
+}
+
+message CreateAnotherRequest {
+  string text = 1;
+  string author = 2;
+}
+
+message GetAnotherRequest {
+  string id = 1;
+}
+
+message Another {
+  string id = 1;
+  string text = 2;
+  string author = 3;
+  string timestamp = 4;
+}
