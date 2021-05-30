@@ -1,12 +1,12 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "proto/another.proto",
+    "title": "proto/health.proto",
     "version": "version not set"
   },
   "tags": [
     {
-      "name": "AnotherService"
+      "name": "HealthService"
     },
     {
       "name": "TodoService"
@@ -19,14 +19,14 @@
     "application/json"
   ],
   "paths": {
-    "/anothers": {
+    "/livez": {
       "get": {
-        "operationId": "AnotherService_ListAll",
+        "operationId": "HealthService_Liveness",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/templateListAllAnotherResponse"
+              "$ref": "#/definitions/templateLivenessResponse"
             }
           },
           "default": {
@@ -37,48 +37,18 @@
           }
         },
         "tags": [
-          "AnotherService"
-        ]
-      },
-      "post": {
-        "operationId": "AnotherService_Create",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/templateAnother"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/templateCreateAnotherRequest"
-            }
-          }
-        ],
-        "tags": [
-          "AnotherService"
+          "HealthService"
         ]
       }
     },
-    "/anothers/{id}": {
+    "/readyz": {
       "get": {
-        "operationId": "AnotherService_Get",
+        "operationId": "HealthService_Readiness",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/templateAnother"
+              "$ref": "#/definitions/templateReadinessResponse"
             }
           },
           "default": {
@@ -88,16 +58,8 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
         "tags": [
-          "AnotherService"
+          "HealthService"
         ]
       }
     },
@@ -185,6 +147,14 @@
     }
   },
   "definitions": {
+    "ReadinessResponseDependencyReadiness": {
+      "type": "object",
+      "properties": {
+        "datastore": {
+          "type": "boolean"
+        }
+      }
+    },
     "protobufAny": {
       "type": "object",
       "properties": {
@@ -215,34 +185,6 @@
         }
       }
     },
-    "templateAnother": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "text": {
-          "type": "string"
-        },
-        "author": {
-          "type": "string"
-        },
-        "timestamp": {
-          "type": "string"
-        }
-      }
-    },
-    "templateCreateAnotherRequest": {
-      "type": "object",
-      "properties": {
-        "text": {
-          "type": "string"
-        },
-        "author": {
-          "type": "string"
-        }
-      }
-    },
     "templateCreateRequest": {
       "type": "object",
       "properties": {
@@ -254,17 +196,6 @@
         }
       }
     },
-    "templateListAllAnotherResponse": {
-      "type": "object",
-      "properties": {
-        "anothers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/templateAnother"
-          }
-        }
-      }
-    },
     "templateListAllResponse": {
       "type": "object",
       "properties": {
@@ -273,6 +204,25 @@
           "items": {
             "$ref": "#/definitions/templateTodo"
           }
+        }
+      }
+    },
+    "templateLivenessResponse": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        }
+      }
+    },
+    "templateReadinessResponse": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "ready": {
+          "$ref": "#/definitions/ReadinessResponseDependencyReadiness"
         }
       }
     },
