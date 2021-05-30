@@ -46,7 +46,7 @@ jobs:
             -t "$REGISTRY_HOSTNAME/$GOOGLE_PROJECT/$IMAGE:$GITHUB_RELEASE_TAG" \
             -t "$REGISTRY_HOSTNAME/$GOOGLE_PROJECT/$IMAGE:latest" \
             --build-arg GITHUB_SHA="$GITHUB_SHA" \
-            --build-arg GITHUB_REF="$GITHUB_REF" ./infra/prod
+            --build-arg GITHUB_REF="$GITHUB_REF" -f infra/prod/Dockerfile
 
       # Push the Docker image to Google Container Registry
       - name: Publish
