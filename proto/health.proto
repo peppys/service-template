@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package template;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "proto/";
+
+service HealthService {
+  rpc Liveness(google.protobuf.Empty) returns (LivenessResponse) {
+    option (google.api.http) = {
+      get: "/livez"
+    };
+  }
+
+  rpc Readiness(google.protobuf.Empty) returns (ReadinessResponse) {
+    option (google.api.http) = {
+      get: "/readyz"
+    };
+  }
+}
+
+message LivenessResponse {
+  bool ok = 1;
+}
+
+message ReadinessResponse {
+  message DependencyReadiness {
+    bool datastore = 1;
+  }
+
+  bool ok = 1;
+  DependencyReadiness ready = 2;
+}
