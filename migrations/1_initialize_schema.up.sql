@@ -1,3 +1,7 @@
+CREATE DATABASE IF NOT EXISTS `service-template`;
+
+USE `service-template`;
+
 CREATE TABLE IF NOT EXISTS `todos` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `text` varchar(255) NOT NULL,

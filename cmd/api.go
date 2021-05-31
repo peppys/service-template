@@ -31,7 +31,7 @@ func main() {
 	reflection.Register(server)
 	db := initDB()
 
-	healthserver := grpcserver.NewHealthGrpcServer()
+	healthserver := grpcserver.NewHealthGrpcServer(db)
 	todorepository := repositories.NewTodoMysqlRepository(db)
 	proto.RegisterTodoServiceServer(server, grpcserver.NewTodoGrpcServer(todorepository))
 	proto.RegisterHealthServiceServer(server, healthserver)

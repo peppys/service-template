@@ -6,15 +6,17 @@ import (
 	"github.com/peppys/service-template/gen/go/proto"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"gorm.io/gorm"
 )
 
 type HealthGrpcServer struct {
 	grpc_health_v1.UnimplementedHealthServer
 	proto.UnimplementedHealthServiceServer
+	db *gorm.DB
 }
 
-func NewHealthGrpcServer() *HealthGrpcServer {
-	return &HealthGrpcServer{}
+func NewHealthGrpcServer(db *gorm.DB) *HealthGrpcServer {
+	return &HealthGrpcServer{db: db}
 }
 
 func (s *HealthGrpcServer) Liveness(ctx context.Context, empty *emptypb.Empty) (*proto.LivenessResponse, error) {
@@ -24,11 +26,17 @@ func (s *HealthGrpcServer) Liveness(ctx context.Context, empty *emptypb.Empty) (
 }
 
 func (s *HealthGrpcServer) Readiness(ctx context.Context, empty *emptypb.Empty) (*proto.ReadinessResponse, error) {
+	readiness := &proto.ReadinessResponse_DependencyReadiness{
+		Datastore: false,
+	}
+	if db, _ := s.db.DB(); db != nil {
+		if err := db.Ping(); err == nil {
+			readiness.Datastore = true
+		}
+	}
 	return &proto.ReadinessResponse{
-		Ok: true,
-		Ready: &proto.ReadinessResponse_DependencyReadiness{
-			Datastore: true,
-		},
+		Ok:    readiness.Datastore,
+		Ready: readiness,
 	}, nil
 }
 
