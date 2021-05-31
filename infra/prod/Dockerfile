@@ -9,20 +9,20 @@ RUN go mod download
 COPY cmd ./cmd
 COPY gen ./gen
 COPY internal ./internal
-COPY swagger-ui ./swagger-ui
+COPY static ./static
 
 RUN go build -o /bin/api cmd/api.go
 
 # Copy binary to debian and run
 FROM debian:jessie-slim
+WORKDIR /opt/app
 
 # Need ca-certificates to make https requests from container
 RUN apt-get update
 RUN apt-get install -y ca-certificates
 
-COPY --from=builder /bin/api /bin/api
-COPY --from=builder /opt/app/swagger-ui ./swagger-ui
-COPY --from=builder /opt/app/gen/openapiv2 ./gen/openapiv2
+COPY --from=builder /bin/api ./api
+COPY --from=builder /opt/app/static ./static
 
 # Start API
-ENTRYPOINT /bin/api
+ENTRYPOINT ./api
