@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package template;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "proto/";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Service Template";
+    version: "1.0";
+  };
+  security_definitions: {
+    security: {
+      key: "bearer";
+      value: {
+        type: TYPE_API_KEY
+        in: IN_HEADER
+        name: "Authorization"
+        description: "Authentication token, prefixed by Bearer: Bearer <token>"
+      }
+    }
+  }
+  security: {
+    security_requirement: {
+      key: "bearer"
+    }
+  }
+};
+
+service AuthService {
+  rpc Me(google.protobuf.Empty) returns (User) {
+    option (google.api.http) = {
+      get: "/auth/me"
+    };
+  }
+
+  rpc Signup(SignupRequest) returns (TokenResponse) {
+    option (google.api.http) = {
+      post: "/auth/signup"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: { } // Disable security key
+    };
+  }
+
+  rpc Token(TokenRequest) returns (TokenResponse) {
+    option (google.api.http) = {
+      post: "/auth/token"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: { } // Disable security key
+    };
+  }
+}
+
+message SignupRequest {
+  string email = 1;
+  string password = 2;
+  string username = 3;
+  string given_name = 4;
+  string family_name = 5;
+  string nickname = 6;
+  string picture = 7;
+}
+
+enum GrantType {
+  password = 0;
+  refresh_token = 1;
+}
+
+message TokenRequest {
+  GrantType grant_type = 1;
+  string username = 2;
+  string password = 3;
+  string refresh_token = 4;
+}
+
+message TokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  string token_type = 3;
+  int32 expires_in = 4;
+  int32 refresh_expires_in = 5;
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  string username = 3;
+  string given_name = 4;
+  string family_name = 5;
+  string nickname = 6;
+  string picture = 7;
+}

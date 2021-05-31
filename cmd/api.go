@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"github.com/peppys/service-template/gen/go/proto"
 	"github.com/peppys/service-template/internal/config"
-	"github.com/peppys/service-template/internal/grpcserver"
-	"github.com/peppys/service-template/internal/grpcserver/interceptors"
+	"github.com/peppys/service-template/internal/grpcservers"
+	"github.com/peppys/service-template/internal/grpcservers/interceptors"
 	"github.com/peppys/service-template/internal/repositories"
+	"github.com/peppys/service-template/internal/services"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/encoding/protojson"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
@@ -20,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 )
@@ -28,13 +31,23 @@ var appConfig *config.AppConfig
 
 func main() {
 	appConfig = config.NewAppConfig()
-	server := grpc.NewServer(buildServerOpts()...)
-	reflection.Register(server)
 	db := initDB()
 
-	healthserver := grpcserver.NewHealthGrpcServer(db)
-	todorepository := repositories.NewTodoRepository(db)
-	proto.RegisterTodoServiceServer(server, grpcserver.NewTodoGrpcServer(todorepository))
+	// repositories
+	todoRepository := repositories.NewTodoRepository(db)
+	userRepository := repositories.NewUserRepository(db)
+	refreshTokenRepository := repositories.NewRefreshTokenRepository(db)
+
+	// services
+	authservice := services.NewAuthService(userRepository, refreshTokenRepository)
+
+	// grpc servers
+	server := grpc.NewServer(buildServerOpts(authservice)...)
+	reflection.Register(server)
+
+	healthserver := grpcservers.NewHealthGrpcServer(db)
+	proto.RegisterAuthServiceServer(server, grpcservers.NewAuthGrpcServer(authservice))
+	proto.RegisterTodoServiceServer(server, grpcservers.NewTodoGrpcServer(todoRepository))
 	proto.RegisterHealthServiceServer(server, healthserver)
 	grpc_health_v1.RegisterHealthServer(server, healthserver)
 
@@ -48,7 +61,12 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	gateway := runtime.NewServeMux()
+	gateway := runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+		MarshalOptions: protojson.MarshalOptions{UseProtoNames: true},
+	}))
+	if err = proto.RegisterAuthServiceHandler(context.Background(), gateway, conn); err != nil {
+		log.Fatalln("Failed to register auth gateway:", err)
+	}
 	if err = proto.RegisterTodoServiceHandler(context.Background(), gateway, conn); err != nil {
 		log.Fatalln("Failed to register todo gateway:", err)
 	}
@@ -104,10 +122,15 @@ func openapiFileHandler() http.Handler {
 	})
 }
 
-func buildServerOpts() []grpc.ServerOption {
+func buildServerOpts(authService *services.AuthService) []grpc.ServerOption {
 	var opts []grpc.ServerOption
 
-	opts = append(opts, grpc.UnaryInterceptor(interceptors.Logging()))
+	opts = append(opts, grpc.UnaryInterceptor(
+		grpc_middleware.ChainUnaryServer(
+			interceptors.Logging(),
+			interceptors.Authorization(authService),
+		),
+	))
 
 	return opts
 }

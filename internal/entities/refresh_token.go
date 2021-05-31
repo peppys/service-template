@@ -6,11 +6,12 @@ import (
 	"time"
 )
 
-type Todo struct {
+type RefreshToken struct {
 	ID        uuid.UUID `gorm:"primary_key;type:uuid;default:uuid_generate_v4()"`
-	Text      string
-	Author    string
+	TokenHash string
+	UserID    uuid.UUID
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	ExpiresAt time.Time
 	DeletedAt gorm.DeletedAt
 }

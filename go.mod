@@ -3,7 +3,11 @@ module github.com/peppys/service-template
 go 1.16
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/google/uuid v1.1.2
+	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.4.0
+	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4
 	google.golang.org/genproto v0.0.0-20210426193834-eac7f76ac494
 	google.golang.org/grpc v1.37.0
