@@ -24,7 +24,7 @@ services:
       - ./go.sum:/opt/app/go.sum
 
   postgres:
-    image: 'postgres:9.6'
+    image: 'postgres:12.7'
     ports:
       - '45432:5432'
     logging:
