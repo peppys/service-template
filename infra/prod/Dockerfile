@@ -21,6 +21,8 @@ RUN apt-get update
 RUN apt-get install -y ca-certificates
 
 COPY --from=builder /bin/api /bin/api
+COPY --from=builder /opt/app/swagger-ui ./swagger-ui
+COPY --from=builder /opt/app/gen/openapiv2 ./gen/openapiv2
 
 # Start API
 ENTRYPOINT /bin/api
