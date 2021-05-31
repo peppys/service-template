@@ -20,12 +20,13 @@ import (
 	"google.golang.org/grpc"
 )
 
-var FILE_PREFIX = "./"
+var workingDirectory string
 
 func main() {
-	if prefix := os.Getenv("FILE_PREFIX"); prefix != "" {
-		FILE_PREFIX = prefix
+	dir, err := os.Getwd(); if err != nil {
+		log.Fatal(err)
 	}
+	workingDirectory = dir
 	server := grpc.NewServer(buildServerOpts()...)
 	reflection.Register(server)
 
@@ -74,7 +75,7 @@ func openapiFileHandler() http.Handler {
 
 		log.Printf("Serving %s", r.URL.Path)
 		p := strings.TrimPrefix(r.URL.Path, "/openapiv2/")
-		p = path.Join(FILE_PREFIX, "gen/openapiv2/", p)
+		p = path.Join(workingDirectory, "gen/openapiv2/", p)
 		http.ServeFile(w, r, p)
 	})
 }
@@ -91,7 +92,7 @@ func swaggerUIHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Serving %s", r.URL.Path)
 		p := strings.TrimPrefix(r.URL.Path, "/swagger-ui/")
-		p = path.Join(FILE_PREFIX, "swagger-ui/", p)
+		p = path.Join(workingDirectory, "swagger-ui/", p)
 		http.ServeFile(w, r, p)
 	})
 }
