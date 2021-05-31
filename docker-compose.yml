@@ -1,12 +1,20 @@
 version: '3'
 services:
   api:
+    depends_on:
+      - postgres
     build:
       context: .
-      dockerfile: ./infra/dev/Dockerfile
+      dockerfile: infra/dev/Dockerfile
     ports:
       - '8080:8080'
     working_dir: /opt/app
+    environment:
+      DB_USER: dev
+      DB_PASS: dev
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: service-template
     volumes:
       - ./cmd:/opt/app/cmd
       - ./gen:/opt/app/gen
@@ -14,3 +22,24 @@ services:
       - ./static:/opt/app/static
       - ./go.mod:/opt/app/go.mod
       - ./go.sum:/opt/app/go.sum
+
+  postgres:
+    image: 'postgres:12.7'
+    ports:
+      - '45432:5432'
+    logging:
+      driver: none
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: service-template
+
+  db-migrate:
+    depends_on:
+      - postgres
+    build:
+      context: .
+      dockerfile: infra/dev/Dockerfile
+    volumes:
+      - ./migrations:/opt/app/migrations
+    entrypoint: ./migrate.linux-amd64 -source file://./migrations -database "postgres://dev:dev@postgres:5432/service-template?sslmode=disable" up

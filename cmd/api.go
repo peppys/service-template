@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/peppys/service-template/gen/go/proto"
+	"github.com/peppys/service-template/internal/config"
 	"github.com/peppys/service-template/internal/grpcserver"
 	"github.com/peppys/service-template/internal/grpcserver/interceptors"
 	"github.com/peppys/service-template/internal/repositories"
@@ -10,21 +12,28 @@ import (
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 )
 
+var appConfig *config.AppConfig
+
 func main() {
+	appConfig = config.NewAppConfig()
 	server := grpc.NewServer(buildServerOpts()...)
 	reflection.Register(server)
+	db := initDB()
 
-	healthserver := grpcserver.NewHealthGrpcServer()
-	todorepository := &repositories.TodoRepository{}
+	healthserver := grpcserver.NewHealthGrpcServer(db)
+	todorepository := repositories.NewTodoRepository(db)
 	proto.RegisterTodoServiceServer(server, grpcserver.NewTodoGrpcServer(todorepository))
 	proto.RegisterHealthServiceServer(server, healthserver)
 	grpc_health_v1.RegisterHealthServer(server, healthserver)
@@ -56,6 +65,28 @@ func main() {
 	}
 	log.Println("Listing on port :8080...")
 	log.Fatal(ok.ListenAndServe())
+}
+
+func initDB() *gorm.DB {
+	dsn := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", appConfig.DB.User, appConfig.DB.Pass, appConfig.DB.Host, appConfig.DB.Port, appConfig.DB.Name)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal(fmt.Errorf("error initializing db connection: %v", err))
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatal(fmt.Errorf("error connecting to db: %v", err))
+	}
+	// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
+	sqlDB.SetMaxIdleConns(10)
+
+	// SetMaxOpenConns sets the maximum number of open connections to the database.
+	sqlDB.SetMaxOpenConns(100)
+
+	// SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
+	return db
 }
 
 func openapiFileHandler() http.Handler {
