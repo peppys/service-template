@@ -12,12 +12,13 @@ import (
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
@@ -32,7 +33,7 @@ func main() {
 	db := initDB()
 
 	healthserver := grpcserver.NewHealthGrpcServer(db)
-	todorepository := repositories.NewTodoMysqlRepository(db)
+	todorepository := repositories.NewTodoRepository(db)
 	proto.RegisterTodoServiceServer(server, grpcserver.NewTodoGrpcServer(todorepository))
 	proto.RegisterHealthServiceServer(server, healthserver)
 	grpc_health_v1.RegisterHealthServer(server, healthserver)
@@ -67,11 +68,23 @@ func main() {
 }
 
 func initDB() *gorm.DB {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=true", appConfig.DB.User, appConfig.DB.Pass, appConfig.DB.Host, appConfig.DB.Port, appConfig.DB.Name)
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	dsn := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", appConfig.DB.User, appConfig.DB.Pass, appConfig.DB.Host, appConfig.DB.Port, appConfig.DB.Name)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal(fmt.Errorf("error initializing mysql connection: %v", err))
+		log.Fatal(fmt.Errorf("error initializing db connection: %v", err))
 	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatal(fmt.Errorf("error connecting to db: %v", err))
+	}
+	// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
+	sqlDB.SetMaxIdleConns(10)
+
+	// SetMaxOpenConns sets the maximum number of open connections to the database.
+	sqlDB.SetMaxOpenConns(100)
+
+	// SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
+	sqlDB.SetConnMaxLifetime(time.Hour)
 
 	return db
 }

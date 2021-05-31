@@ -2,7 +2,7 @@ version: '3'
 services:
   api:
     depends_on:
-      - mysql
+      - postgres
     build:
       context: .
       dockerfile: infra/dev/Dockerfile
@@ -12,8 +12,8 @@ services:
     environment:
       DB_USER: dev
       DB_PASS: dev
-      DB_HOST: mysql
-      DB_PORT: 3306
+      DB_HOST: postgres
+      DB_PORT: 5432
       DB_NAME: service-template
     volumes:
       - ./cmd:/opt/app/cmd
@@ -23,25 +23,23 @@ services:
       - ./go.mod:/opt/app/go.mod
       - ./go.sum:/opt/app/go.sum
 
-  mysql:
-    image: 'mysql:5.7'
-    command: "--character-set-server='utf8mb4' --collation-server='utf8mb4_unicode_ci'"
+  postgres:
+    image: 'postgres:9.6'
     ports:
-      - '43306:3306'
+      - '45432:5432'
     logging:
       driver: none
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_USER: dev
-      MYSQL_PASSWORD: dev
-      MYSQL_DATABASE: service-template
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: service-template
 
   db-migrate:
     depends_on:
-      - mysql
+      - postgres
     build:
       context: .
       dockerfile: infra/dev/Dockerfile
     volumes:
       - ./migrations:/opt/app/migrations
-    entrypoint: ./migrate.linux-amd64 -source file://./migrations -database "mysql://dev:dev@tcp(mysql:3306)/service-template" up
+    entrypoint: ./migrate.linux-amd64 -source file://./migrations -database "postgres://dev:dev@postgres:5432/service-template?sslmode=disable" up
