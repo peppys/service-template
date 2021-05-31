@@ -3,7 +3,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: ./infra/dev/.
+      dockerfile: ./infra/dev/Dockerfile
     ports:
       - '8080:8080'
     working_dir: /opt/app
@@ -11,6 +11,6 @@ services:
       - ./cmd:/opt/app/cmd
       - ./gen:/opt/app/gen
       - ./internal:/opt/app/internal
-      - ./swagger-ui:/opt/app/swagger-ui
+      - ./static:/opt/app/static
       - ./go.mod:/opt/app/go.mod
       - ./go.sum:/opt/app/go.sum

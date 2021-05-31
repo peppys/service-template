@@ -14,6 +14,6 @@ plugins:
       - paths=source_relative
       - generate_unbound_methods=true
   - name: openapiv2
-    out: gen/openapiv2
+    out: static/openapiv2
     opt:
       - allow_merge=true
