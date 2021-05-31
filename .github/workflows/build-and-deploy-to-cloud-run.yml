@@ -33,10 +33,12 @@ jobs:
           service_account_email: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
           service_account_key: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
 
+      # Install gcloud beta components
+      - run: |
+          gcloud components install beta
+
       # Configure docker to use the gcloud command-line tool as a credential helper
       - run: |
-          # Set up docker to authenticate
-          # via gcloud command-line tool.
           gcloud auth configure-docker
 
       # Build the Docker image
@@ -56,4 +58,4 @@ jobs:
       # Deploy the Docker image to the Cloud Run service
       - name: Deploy API
         run: |
-          gcloud alpha run deploy $CLOUD_RUN_SERVICE --image $REGISTRY_HOSTNAME/$GOOGLE_PROJECT/$IMAGE:${GITHUB_SHA} --platform managed --project $GOOGLE_PROJECT --region us-central1 --allow-unauthenticated --use-http2 --quiet
+          gcloud alpha run deploy $CLOUD_RUN_SERVICE --image $REGISTRY_HOSTNAME/$GOOGLE_PROJECT/$IMAGE:${GITHUB_SHA} --platform managed --project $GOOGLE_PROJECT --region us-central1 --allow-unauthenticated --use-http2
