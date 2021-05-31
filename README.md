@@ -1,6 +1,19 @@
 # service-template
 
-# Setup
+## Setup
+#### Dependencies
+- [buf cli](https://docs.buf.build/installation/) to compile proto files
+- [docker](https://www.docker.com/) to run local containers
+
+### Installation
+```shell script
+# one time command to download proto dependencies
+$ buf beta mod update
+
+# generate client/swagger/server code from proto files
+$ buf generate
+```
+
 ##### Spin up the API
 ```shell script
 docker-compose up -d
@@ -64,3 +77,27 @@ $ curl -X GET localhost:8080/todos | json_pp
 ```
 
 ##### Navigate to http://localhost:8080/swagger-ui/ to interact with the REST gateway via swagger
+
+## Demo
+##### Swagger
+https://service-template-oxm27jqbha-uc.a.run.app/swagger-ui/
+##### gRPC Health Endpoint
+```shell script
+$ grpcurl service-template-oxm27jqbha-uc.a.run.app:443 template.HealthService/Readiness
+{
+  "ok": true,
+  "ready": {
+    "datastore": true
+  }
+}
+```
+##### REST Health Endpoint
+```shell script
+$ curl -X GET https://service-template-oxm27jqbha-uc.a.run.app/readyz | json_pp
+{
+   "ok" : true,
+   "ready" : {
+      "datastore" : true
+   }
+}
+```
