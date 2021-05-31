@@ -1,12 +1,20 @@
 version: '3'
 services:
   api:
+    depends_on:
+      - mysql
     build:
       context: .
-      dockerfile: ./infra/dev/Dockerfile
+      dockerfile: infra/dev/Dockerfile
     ports:
       - '8080:8080'
     working_dir: /opt/app
+    environment:
+      DB_USER: dev
+      DB_PASS: dev
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: service-template
     volumes:
       - ./cmd:/opt/app/cmd
       - ./gen:/opt/app/gen
@@ -14,3 +22,26 @@ services:
       - ./static:/opt/app/static
       - ./go.mod:/opt/app/go.mod
       - ./go.sum:/opt/app/go.sum
+
+  mysql:
+    image: 'mysql:5.7'
+    command: "--character-set-server='utf8mb4' --collation-server='utf8mb4_unicode_ci'"
+    ports:
+      - '43306:3306'
+    logging:
+      driver: none
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: dev
+      MYSQL_PASSWORD: dev
+      MYSQL_DATABASE: service-template
+
+  db-migrate:
+    depends_on:
+      - mysql
+    build:
+      context: .
+      dockerfile: infra/dev/Dockerfile
+    volumes:
+      - ./migrations:/opt/app/migrations
+    entrypoint: ./migrate.linux-amd64 -source file://./migrations -database "mysql://dev:dev@tcp(mysql:3306)/service-template" up

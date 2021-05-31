@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/peppys/service-template/gen/go/proto"
+	"github.com/peppys/service-template/internal/config"
 	"github.com/peppys/service-template/internal/grpcserver"
 	"github.com/peppys/service-template/internal/grpcserver/interceptors"
 	"github.com/peppys/service-template/internal/repositories"
@@ -10,6 +12,8 @@ import (
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"path"
@@ -19,12 +23,16 @@ import (
 	"google.golang.org/grpc"
 )
 
+var appConfig *config.AppConfig
+
 func main() {
+	appConfig = config.NewAppConfig()
 	server := grpc.NewServer(buildServerOpts()...)
 	reflection.Register(server)
+	db := initDB()
 
 	healthserver := grpcserver.NewHealthGrpcServer()
-	todorepository := &repositories.TodoRepository{}
+	todorepository := repositories.NewTodoMysqlRepository(db)
 	proto.RegisterTodoServiceServer(server, grpcserver.NewTodoGrpcServer(todorepository))
 	proto.RegisterHealthServiceServer(server, healthserver)
 	grpc_health_v1.RegisterHealthServer(server, healthserver)
@@ -56,6 +64,16 @@ func main() {
 	}
 	log.Println("Listing on port :8080...")
 	log.Fatal(ok.ListenAndServe())
+}
+
+func initDB() *gorm.DB {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=true", appConfig.DB.User, appConfig.DB.Pass, appConfig.DB.Host, appConfig.DB.Port, appConfig.DB.Name)
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal(fmt.Errorf("error initializing mysql connection: %v", err))
+	}
+
+	return db
 }
 
 func openapiFileHandler() http.Handler {
