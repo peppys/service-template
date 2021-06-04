@@ -1,4 +1,4 @@
-package grpcserver
+package grpcservers
 
 import (
 	"context"
@@ -60,7 +60,7 @@ func (s *TodoGrpcServer) Get(ctx context.Context, request *proto.GetRequest) (*p
 
 func toProto(todo *entities.Todo) *proto.Todo {
 	return &proto.Todo{
-		Id:        fmt.Sprintf("%v", todo.ID),
+		Id:        todo.ID.String(),
 		Text:      todo.Text,
 		Author:    todo.Author,
 		Timestamp: todo.CreatedAt.String(),

@@ -1,10 +1,13 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "proto/health.proto",
-    "version": "version not set"
+    "title": "Service Template",
+    "version": "1.0"
   },
   "tags": [
+    {
+      "name": "AuthService"
+    },
     {
       "name": "HealthService"
     },
@@ -19,6 +22,94 @@
     "application/json"
   ],
   "paths": {
+    "/auth/me": {
+      "get": {
+        "operationId": "AuthService_Me",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/templateUser"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/auth/signup": {
+      "post": {
+        "operationId": "AuthService_Signup",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/templateTokenResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/templateSignupRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ],
+        "security": []
+      }
+    },
+    "/auth/token": {
+      "post": {
+        "operationId": "AuthService_Token",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/templateTokenResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/templateTokenRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ],
+        "security": []
+      }
+    },
     "/livez": {
       "get": {
         "operationId": "HealthService_Liveness",
@@ -38,7 +129,8 @@
         },
         "tags": [
           "HealthService"
-        ]
+        ],
+        "security": []
       }
     },
     "/readyz": {
@@ -60,7 +152,8 @@
         },
         "tags": [
           "HealthService"
-        ]
+        ],
+        "security": []
       }
     },
     "/todos": {
@@ -158,7 +251,7 @@
     "protobufAny": {
       "type": "object",
       "properties": {
-        "typeUrl": {
+        "type_url": {
           "type": "string"
         },
         "value": {
@@ -196,6 +289,14 @@
         }
       }
     },
+    "templateGrantType": {
+      "type": "string",
+      "enum": [
+        "password",
+        "refresh_token"
+      ],
+      "default": "password"
+    },
     "templateListAllResponse": {
       "type": "object",
       "properties": {
@@ -226,6 +327,32 @@
         }
       }
     },
+    "templateSignupRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "given_name": {
+          "type": "string"
+        },
+        "family_name": {
+          "type": "string"
+        },
+        "nickname": {
+          "type": "string"
+        },
+        "picture": {
+          "type": "string"
+        }
+      }
+    },
     "templateTodo": {
       "type": "object",
       "properties": {
@@ -242,6 +369,84 @@
           "type": "string"
         }
       }
+    },
+    "templateTokenRequest": {
+      "type": "object",
+      "properties": {
+        "grant_type": {
+          "$ref": "#/definitions/templateGrantType"
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "refresh_token": {
+          "type": "string"
+        }
+      }
+    },
+    "templateTokenResponse": {
+      "type": "object",
+      "properties": {
+        "access_token": {
+          "type": "string"
+        },
+        "refresh_token": {
+          "type": "string"
+        },
+        "token_type": {
+          "type": "string"
+        },
+        "expires_in": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "refresh_expires_in": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "templateUser": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "given_name": {
+          "type": "string"
+        },
+        "family_name": {
+          "type": "string"
+        },
+        "nickname": {
+          "type": "string"
+        },
+        "picture": {
+          "type": "string"
+        }
+      }
     }
-  }
+  },
+  "securityDefinitions": {
+    "bearer": {
+      "type": "apiKey",
+      "description": "Authentication token, prefixed by Bearer: Bearer \u003ctoken\u003e",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
 }
