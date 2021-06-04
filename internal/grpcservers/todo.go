@@ -2,7 +2,6 @@ package grpcservers
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/peppys/service-template/gen/go/proto"
 	"github.com/peppys/service-template/internal/entities"
@@ -37,7 +36,7 @@ func (s *TodoGrpcServer) ListAll(ctx context.Context, request *emptypb.Empty) (*
 		UserID: u.UUID,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error while listing: %v", err)
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	responses := make([]*proto.Todo, 0, len(records))
@@ -60,7 +59,7 @@ func (s *TodoGrpcServer) Create(ctx context.Context, request *proto.CreateReques
 		UserID: u.UUID,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error while creating: %v", err)
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	return toProto(record), nil
@@ -74,14 +73,14 @@ func (s *TodoGrpcServer) Get(ctx context.Context, request *proto.GetRequest) (*p
 
 	recordUuid, err := uuid.Parse(request.GetId())
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
 	record, err := s.repository.FindFirstWhere(ctx, entities.Todo{
 		ID:     recordUuid,
 		UserID: u.UUID,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error while finding: %v", err)
+		return nil, status.Errorf(codes.NotFound, "todo not found")
 	}
 
 	return toProto(record), nil
@@ -95,18 +94,18 @@ func (s *TodoGrpcServer) Delete(ctx context.Context, request *proto.DeleteReques
 
 	recordUuid, err := uuid.Parse(request.GetId())
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
 	_, err = s.repository.FindFirstWhere(ctx, entities.Todo{
 		ID:     recordUuid,
 		UserID: u.UUID,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error while finding: %v", err)
+		return nil, status.Errorf(codes.NotFound, "todo not found")
 	}
 	err = s.repository.DeleteByID(ctx, recordUuid.String())
 	if err != nil {
-		return nil, fmt.Errorf("error while deleting: %v", err)
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	return &emptypb.Empty{}, nil
 }

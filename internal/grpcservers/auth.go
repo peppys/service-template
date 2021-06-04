@@ -56,7 +56,7 @@ func (a *AuthGrpcServer) Signup(ctx context.Context, request *proto.SignupReques
 	// create user
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(request.GetPassword()), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, fmt.Errorf("invalid password: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
 	user, err := a.service.CreateUser(ctx, &entities.User{
 		Email:        request.GetEmail(),
@@ -69,11 +69,11 @@ func (a *AuthGrpcServer) Signup(ctx context.Context, request *proto.SignupReques
 		Picture:      request.GetPicture(),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error creating user: %v", err)
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	tokens, err := a.service.GenerateTokens(ctx, user.ID)
 	if err != nil {
-		return nil, fmt.Errorf("error creating token after signup: %v", err)
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	return a.toProto(tokens), nil
@@ -89,17 +89,17 @@ func (a *AuthGrpcServer) Token(ctx context.Context, request *proto.TokenRequest)
 	case proto.GrantType_password:
 		tokens, err := a.service.GenerateTokensViaCredentials(ctx, request.GetUsername(), request.GetPassword())
 		if err != nil {
-			return nil, fmt.Errorf("error generating tokens via credentials: %v", err)
+			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 		return a.toProto(tokens), nil
 	case proto.GrantType_refresh_token:
 		tokens, err := a.service.GenerateTokensViaRefreshToken(ctx, request.GetRefreshToken())
 		if err != nil {
-			return nil, fmt.Errorf("error generating tokens via refresh token: %v", err)
+			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 		return a.toProto(tokens), nil
 	default:
-		return nil, fmt.Errorf("unsupported grant type: %s", request.GetGrantType())
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("unsupported grant type: %s", request.GetGrantType()))
 	}
 }
 
