@@ -144,7 +144,7 @@ $ grpcurl -plaintext \
 }
 ```
 #### REST Gateway
-######[grpc-gateway](https://grpc-ecosystem.github.io/grpc-gateway/) reverse proxy will setup HTTP/1 endpoints for each gRPC method
+###### [grpc-gateway](https://grpc-ecosystem.github.io/grpc-gateway/) reverse proxy will setup HTTP/1 endpoints for each gRPC method
 ##### Logged In User Details
 ```shell script
 $ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MjI4MzI1MTYsImp0aSI6IjFhYjk0YWEwLTJjOWMtNDY2NC1hODM5LWM2ZWY1ODYzM2RkNiIsImlhdCI6MTYyMjgyODkxNiwiaXNzIjoiYXBpIiwic3ViIjoiMmQ5OTYyMDctYTkxMS00MDVlLWI1OTMtMTI1NjQzZmRiYzc4IiwiZW1haWwiOiJwZXBAdGVzdC5jb20iLCJ1c2VybmFtZSI6InBlcHNtb290aCIsIm5hbWUiOiJQZXAgU21vb3RoIiwiZ2l2ZW5fbmFtZSI6IlBlcCIsImZhbWlseV9uYW1lIjoiU21vb3RoIiwibmlja25hbWUiOiJQZXAiLCJwaWN0dXJlIjoiIn0.esN_ipmbbITUlKSwQIo2rgbJHIe-1MTOsYNDcL1-K5o" \
