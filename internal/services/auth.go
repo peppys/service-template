@@ -14,19 +14,9 @@ import (
 )
 
 type AuthService struct {
-	user         *repositories.UserRepository
-	refreshToken *repositories.RefreshTokenRepository
-}
-
-type UserClaims struct {
-	jwt.StandardClaims
-	Email      string `json:"email"`
-	Username   string `json:"username"`
-	Name       string `json:"name"`
-	GivenName  string `json:"given_name"`
-	FamilyName string `json:"family_name"`
-	Nickname   string `json:"nickname"`
-	Picture    string `json:"picture"`
+	user                  *repositories.UserRepository
+	refreshToken          *repositories.RefreshTokenRepository
+	accessTokenSigningKey string
 }
 
 type RefreshTokenWithSecret struct {
@@ -41,30 +31,30 @@ type AuthTokens struct {
 	RefreshTokenExpiresIn time.Duration
 }
 
-func NewAuthService(user *repositories.UserRepository, refreshToken *repositories.RefreshTokenRepository) *AuthService {
-	return &AuthService{user, refreshToken}
+func NewAuthService(user *repositories.UserRepository, refreshToken *repositories.RefreshTokenRepository, accessTokenSigningKey string) *AuthService {
+	return &AuthService{user, refreshToken, accessTokenSigningKey}
 }
 
 func (s *AuthService) CreateUser(ctx context.Context, user *entities.User) (*entities.User, error) {
 	return s.user.Save(ctx, user)
 }
 
-func (s *AuthService) VerifyToken(ctx context.Context, accessToken string) (*UserClaims, error) {
+func (s *AuthService) VerifyToken(ctx context.Context, accessToken string) (*entities.UserClaims, error) {
 	token, err := jwt.ParseWithClaims(
 		accessToken,
-		&UserClaims{},
+		&entities.UserClaims{},
 		func(token *jwt.Token) (interface{}, error) {
 			_, ok := token.Method.(*jwt.SigningMethodHMAC)
 			if !ok {
 				return nil, fmt.Errorf("unexpected token signing method")
 			}
 
-			return []byte("some-key"), nil
+			return []byte(s.accessTokenSigningKey), nil
 		})
 	if err != nil {
 		return nil, fmt.Errorf("invalid token: %w", err)
 	}
-	claims, ok := token.Claims.(*UserClaims)
+	claims, ok := token.Claims.(*entities.UserClaims)
 	if !ok {
 		return nil, fmt.Errorf("invalid token claims")
 	}
@@ -82,7 +72,7 @@ func (s *AuthService) GenerateTokensViaCredentials(ctx context.Context, username
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		return nil, fmt.Errorf("incorrect username password combo: %v", err)
 	}
-	tokens, err := s.generateTokens(ctx, user.ID)
+	tokens, err := s.GenerateTokens(ctx, user.ID)
 	if err != nil {
 		return nil, fmt.Errorf("error generating new refresh token: %v", err)
 	}
@@ -96,14 +86,14 @@ func (s *AuthService) GenerateTokensViaRefreshToken(ctx context.Context, token s
 	if err != nil {
 		return nil, fmt.Errorf("error finding refresh token: %v", err)
 	}
-	tokens, err := s.generateTokens(ctx, record.UserID)
+	tokens, err := s.GenerateTokens(ctx, record.UserID)
 	if err != nil {
 		return nil, fmt.Errorf("error generating new refresh token: %v", err)
 	}
 	return tokens, nil
 }
 
-func (s *AuthService) generateTokens(ctx context.Context, userID uuid.UUID) (*AuthTokens, error) {
+func (s *AuthService) GenerateTokens(ctx context.Context, userID uuid.UUID) (*AuthTokens, error) {
 	user, err := s.user.FindFirst(ctx, entities.User{
 		ID: userID,
 	})
@@ -130,7 +120,8 @@ func (s *AuthService) generateTokens(ctx context.Context, userID uuid.UUID) (*Au
 }
 
 func (s *AuthService) generateAccessToken(user *entities.User) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, entities.UserClaims{
+		UUID:       user.ID,
 		Email:      user.Email,
 		Username:   user.Username,
 		Name:       user.Name,
@@ -146,7 +137,7 @@ func (s *AuthService) generateAccessToken(user *entities.User) (string, error) {
 			Issuer:    "api",
 		},
 	})
-	signed, err := token.SignedString([]byte("some-key"))
+	signed, err := token.SignedString([]byte(s.accessTokenSigningKey))
 	if err != nil {
 		return "", fmt.Errorf("failed to sign token: %v", err)
 	}

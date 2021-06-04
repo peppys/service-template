@@ -36,9 +36,10 @@ CREATE TABLE refresh_tokens (
 CREATE TABLE todos (
   id uuid DEFAULT uuid_generate_v4(),
   text text,
-  author text,
+  user_id uuid NOT NULL,
   created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   deleted_at timestamp NULL DEFAULT NULL,
-  PRIMARY KEY(id)
+  PRIMARY KEY(id),
+  CONSTRAINT fk_user_id FOREIGN KEY(user_id) REFERENCES users(id)
 );

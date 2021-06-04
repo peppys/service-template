@@ -39,7 +39,7 @@ func main() {
 	refreshTokenRepository := repositories.NewRefreshTokenRepository(db)
 
 	// services
-	authservice := services.NewAuthService(userRepository, refreshTokenRepository)
+	authservice := services.NewAuthService(userRepository, refreshTokenRepository, appConfig.Auth.AccessTokenSigningKey)
 
 	// grpc servers
 	server := grpc.NewServer(buildServerOpts(authservice)...)
@@ -62,7 +62,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	gateway := runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
-		MarshalOptions: protojson.MarshalOptions{UseProtoNames: true},
+		MarshalOptions: protojson.MarshalOptions{UseProtoNames: true, EmitUnpopulated: true},
 	}))
 	if err = proto.RegisterAuthServiceHandler(context.Background(), gateway, conn); err != nil {
 		log.Fatalln("Failed to register auth gateway:", err)
