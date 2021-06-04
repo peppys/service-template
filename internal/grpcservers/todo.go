@@ -3,15 +3,20 @@ package grpcservers
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/peppys/service-template/gen/go/proto"
 	"github.com/peppys/service-template/internal/entities"
+	"github.com/peppys/service-template/internal/utils"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type repository interface {
-	FindAll(ctx context.Context) ([]*entities.Todo, error)
-	Create(ctx context.Context, todo *entities.Todo) (*entities.Todo, error)
-	FindById(ctx context.Context, id string) (*entities.Todo, error)
+	FindAllWhere(context.Context, entities.Todo) ([]*entities.Todo, error)
+	FindFirstWhere(context.Context, entities.Todo) (*entities.Todo, error)
+	Create(context.Context, *entities.Todo) (*entities.Todo, error)
+	DeleteByID(context.Context, string) error
 }
 type TodoGrpcServer struct {
 	proto.UnimplementedTodoServiceServer
@@ -23,7 +28,14 @@ func NewTodoGrpcServer(repo repository) *TodoGrpcServer {
 }
 
 func (s *TodoGrpcServer) ListAll(ctx context.Context, request *emptypb.Empty) (*proto.ListAllResponse, error) {
-	records, err := s.repository.FindAll(ctx)
+	u, err := utils.UserClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated")
+	}
+
+	records, err := s.repository.FindAllWhere(ctx, entities.Todo{
+		UserID: u.UUID,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("error while listing: %v", err)
 	}
@@ -38,9 +50,14 @@ func (s *TodoGrpcServer) ListAll(ctx context.Context, request *emptypb.Empty) (*
 }
 
 func (s *TodoGrpcServer) Create(ctx context.Context, request *proto.CreateRequest) (*proto.Todo, error) {
+	u, err := utils.UserClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated")
+	}
+
 	record, err := s.repository.Create(ctx, &entities.Todo{
 		Text:   request.GetText(),
-		Author: request.GetAuthor(),
+		UserID: u.UUID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error while creating: %v", err)
@@ -50,7 +67,19 @@ func (s *TodoGrpcServer) Create(ctx context.Context, request *proto.CreateReques
 }
 
 func (s *TodoGrpcServer) Get(ctx context.Context, request *proto.GetRequest) (*proto.Todo, error) {
-	record, err := s.repository.FindById(ctx, request.GetId())
+	u, err := utils.UserClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated")
+	}
+
+	recordUuid, err := uuid.Parse(request.GetId())
+	if err != nil {
+		return nil, err
+	}
+	record, err := s.repository.FindFirstWhere(ctx, entities.Todo{
+		ID:     recordUuid,
+		UserID: u.UUID,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("error while finding: %v", err)
 	}
@@ -58,11 +87,35 @@ func (s *TodoGrpcServer) Get(ctx context.Context, request *proto.GetRequest) (*p
 	return toProto(record), nil
 }
 
+func (s *TodoGrpcServer) Delete(ctx context.Context, request *proto.DeleteRequest) (*emptypb.Empty, error) {
+	u, err := utils.UserClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated")
+	}
+
+	recordUuid, err := uuid.Parse(request.GetId())
+	if err != nil {
+		return nil, err
+	}
+	_, err = s.repository.FindFirstWhere(ctx, entities.Todo{
+		ID:     recordUuid,
+		UserID: u.UUID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error while finding: %v", err)
+	}
+	err = s.repository.DeleteByID(ctx, recordUuid.String())
+	if err != nil {
+		return nil, fmt.Errorf("error while deleting: %v", err)
+	}
+	return &emptypb.Empty{}, nil
+}
+
 func toProto(todo *entities.Todo) *proto.Todo {
 	return &proto.Todo{
 		Id:        todo.ID.String(),
 		Text:      todo.Text,
-		Author:    todo.Author,
+		UserId:    todo.UserID.String(),
 		Timestamp: todo.CreatedAt.String(),
 	}
 }

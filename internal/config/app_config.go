@@ -12,8 +12,13 @@ type DBConfig struct {
 	Name string
 }
 
+type AuthConfig struct {
+	AccessTokenSigningKey string
+}
+
 type AppConfig struct {
-	DB DBConfig
+	DB   DBConfig
+	Auth AuthConfig
 }
 
 func NewAppConfig() *AppConfig {
@@ -24,6 +29,9 @@ func NewAppConfig() *AppConfig {
 			Host: getEnv("DB_HOST", "127.0.0.1"),
 			Port: getEnv("DB_PORT", "3306"),
 			Name: getEnv("DB_NAME", "dbname"),
+		},
+		Auth: AuthConfig{
+			AccessTokenSigningKey: getEnv("ACCESS_TOKEN_SIGNING_KEY", "some-key"),
 		},
 	}
 }

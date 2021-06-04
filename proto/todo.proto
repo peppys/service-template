@@ -26,6 +26,12 @@ service TodoService {
       get: "/todos/{id}"
     };
   }
+
+  rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/todos/{id}"
+    };
+  }
 }
 
 message ListAllResponse {
@@ -34,16 +40,19 @@ message ListAllResponse {
 
 message CreateRequest {
   string text = 1;
-  string author = 2;
 }
 
 message GetRequest {
   string id = 1;
 }
 
+message DeleteRequest {
+  string id = 1;
+}
+
 message Todo {
   string id = 1;
   string text = 2;
-  string author = 3;
+  string user_id = 3;
   string timestamp = 4;
 }

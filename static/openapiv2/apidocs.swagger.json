@@ -236,6 +236,34 @@
         "tags": [
           "TodoService"
         ]
+      },
+      "delete": {
+        "operationId": "TodoService_Delete",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TodoService"
+        ]
       }
     }
   },
@@ -282,9 +310,6 @@
       "type": "object",
       "properties": {
         "text": {
-          "type": "string"
-        },
-        "author": {
           "type": "string"
         }
       }
@@ -362,7 +387,7 @@
         "text": {
           "type": "string"
         },
-        "author": {
+        "user_id": {
           "type": "string"
         },
         "timestamp": {

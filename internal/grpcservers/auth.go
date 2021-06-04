@@ -3,9 +3,11 @@ package grpcservers
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/peppys/service-template/gen/go/proto"
 	"github.com/peppys/service-template/internal/entities"
 	"github.com/peppys/service-template/internal/services"
+	"github.com/peppys/service-template/internal/utils"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -14,7 +16,14 @@ import (
 
 type AuthGrpcServer struct {
 	proto.UnimplementedAuthServiceServer
-	service *services.AuthService
+	service authService
+}
+
+type authService interface {
+	CreateUser(context.Context, *entities.User) (*entities.User, error)
+	GenerateTokensViaCredentials(context.Context, string, string) (*services.AuthTokens, error)
+	GenerateTokensViaRefreshToken(context.Context, string) (*services.AuthTokens, error)
+	GenerateTokens(context.Context, uuid.UUID) (*services.AuthTokens, error)
 }
 
 func NewAuthGrpcServer(service *services.AuthService) *AuthGrpcServer {
@@ -22,8 +31,8 @@ func NewAuthGrpcServer(service *services.AuthService) *AuthGrpcServer {
 }
 
 func (a *AuthGrpcServer) Me(ctx context.Context, empty *emptypb.Empty) (*proto.User, error) {
-	u, ok := ctx.Value("user").(*services.UserClaims)
-	if !ok {
+	u, err := utils.UserClaimsFromContext(ctx)
+	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated")
 	}
 
@@ -39,6 +48,11 @@ func (a *AuthGrpcServer) Me(ctx context.Context, empty *emptypb.Empty) (*proto.U
 }
 
 func (a *AuthGrpcServer) Signup(ctx context.Context, request *proto.SignupRequest) (*proto.TokenResponse, error) {
+	_, err := utils.UserClaimsFromContext(ctx)
+	if err == nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "you are already authenticated")
+	}
+
 	// create user
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(request.GetPassword()), bcrypt.DefaultCost)
 	if err != nil {
@@ -57,7 +71,7 @@ func (a *AuthGrpcServer) Signup(ctx context.Context, request *proto.SignupReques
 	if err != nil {
 		return nil, fmt.Errorf("error creating user: %v", err)
 	}
-	tokens, err := a.service.GenerateTokensViaCredentials(ctx, user.Username, request.GetPassword())
+	tokens, err := a.service.GenerateTokens(ctx, user.ID)
 	if err != nil {
 		return nil, fmt.Errorf("error creating token after signup: %v", err)
 	}
@@ -66,6 +80,11 @@ func (a *AuthGrpcServer) Signup(ctx context.Context, request *proto.SignupReques
 }
 
 func (a *AuthGrpcServer) Token(ctx context.Context, request *proto.TokenRequest) (*proto.TokenResponse, error) {
+	_, err := utils.UserClaimsFromContext(ctx)
+	if err == nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "you are already authenticated")
+	}
+
 	switch request.GetGrantType() {
 	case proto.GrantType_password:
 		tokens, err := a.service.GenerateTokensViaCredentials(ctx, request.GetUsername(), request.GetPassword())
