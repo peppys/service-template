@@ -3,8 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/peppys/service-template/gen/go/graphql"
 	"github.com/peppys/service-template/gen/go/proto"
 	"github.com/peppys/service-template/internal/config"
+	"github.com/peppys/service-template/internal/graphqlresolvers"
+	"github.com/peppys/service-template/internal/graphqlresolvers/middleware"
 	"github.com/peppys/service-template/internal/grpcservers"
 	"github.com/peppys/service-template/internal/grpcservers/interceptors"
 	"github.com/peppys/service-template/internal/repositories"
@@ -73,9 +78,20 @@ func main() {
 	if err = proto.RegisterHealthServiceHandler(context.Background(), gateway, conn); err != nil {
 		log.Fatalln("Failed to register health gateway:", err)
 	}
+
 	mux.Handle("/", gateway)
 	mux.Handle("/openapiv2/", openapiFileHandler())
 	mux.Handle("/swagger-ui/", swaggerUIHandler())
+
+	// graphql
+	mux.Handle("/graphql", middleware.Authorization(
+		authservice,
+		handler.NewDefaultServer(
+			graphql.NewExecutableSchema(
+				graphql.Config{Resolvers: graphqlresolvers.New(authservice)}),
+		),
+	))
+	mux.Handle("/graphiql", playground.Handler("GraphQL playground", "/graphql"))
 
 	ok := &http.Server{
 		Addr:    ":8080",

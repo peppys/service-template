@@ -42,8 +42,8 @@ func (a *AuthGrpcServer) Me(ctx context.Context, empty *emptypb.Empty) (*proto.U
 		Username:   u.Username,
 		GivenName:  u.GivenName,
 		FamilyName: u.FamilyName,
-		Nickname:   u.GivenName,
-		Picture:    u.Picture,
+		Nickname:   utils.DerefString(u.Nickname, ""),
+		Picture:    utils.DerefString(u.Picture, ""),
 	}, nil
 }
 
@@ -58,6 +58,8 @@ func (a *AuthGrpcServer) Signup(ctx context.Context, request *proto.SignupReques
 	if err != nil {
 		return nil, fmt.Errorf("invalid password: %v", err)
 	}
+	nickname := request.GetNickname()
+	picture := request.GetPicture()
 	user, err := a.service.CreateUser(ctx, &entities.User{
 		Email:        request.GetEmail(),
 		Username:     request.GetUsername(),
@@ -65,8 +67,8 @@ func (a *AuthGrpcServer) Signup(ctx context.Context, request *proto.SignupReques
 		GivenName:    request.GetGivenName(),
 		FamilyName:   request.GetFamilyName(),
 		Name:         fmt.Sprintf("%s %s", request.GetGivenName(), request.GetFamilyName()),
-		Nickname:     request.GetNickname(),
-		Picture:      request.GetPicture(),
+		Nickname:     &nickname,
+		Picture:      &picture,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error creating user: %v", err)

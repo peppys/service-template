@@ -19,7 +19,7 @@ func Authorization(authService *services.AuthService) grpc.UnaryServerIntercepto
 
 		claims, err := authService.VerifyToken(ctx, token)
 		if err != nil {
-			log.Printf("Failed verifying token: %v", token)
+			log.Printf("Failed verifying token: %v - %v", token, err)
 			return ctx, nil
 		}
 

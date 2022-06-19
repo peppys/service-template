@@ -10,6 +10,7 @@
 - [postgres](https://github.com/docker-library/postgres) - SQL backend
 - [golang-migrate](https://github.com/golang-migrate/migrate) - golang library to handle SQL migrations
 - [jwt-go](https://github.com/dgrijalva/jwt-go) - golang library to interact with json web tokens
+- [gqlgen](https://github.com/99designs/gqlgen) - golang library for building GraphQL servers
 
 ### Installation
 ```shell script
@@ -21,10 +22,18 @@ $ brew tap bufbuild/buf
 $ brew install buf
 
 # one time command to download proto dependencies
-$ buf beta mod update
+$ buf mod update
 
 # generate client/swagger/server code from proto files
 $ buf generate
+
+# install the tools listed in tools/tools.go
+$ go install \ 
+  github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 \
+  # ... etc  
+  
+# generate graphql code from schema
+$ gqlgen generate
 ```
 
 #### Spin up the API
@@ -173,31 +182,27 @@ $ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOj
   ]
 }
 ```
-#### Swagger
-##### Navigate to http://localhost:8080/swagger-ui/ to interact with the REST gateway via swagger
 
-## Demo
-##### Swagger
-https://service-template-oxm27jqbha-uc.a.run.app/swagger-ui/
-##### gRPC Health Endpoint
-```shell script
-$ grpcurl service-template-oxm27jqbha-uc.a.run.app:443 \
-    template.HealthService/Readiness
-{
-  "ok": true,
-  "ready": {
-    "datastore": true
+#### GraphQL
+##### Navigate to http://localhost:8080/graphiql to interact with the GraphQL playground
+```graphql
+mutation Signup {
+  signup(
+    input: {
+        email: "pep@test.com", 
+        username: "pepsmooth", 
+        password: "mypass", 
+        givenName: "Pep", 
+        familyName: "Smooth"
+    }
+  ) {
+    accessToken
+    refreshToken
+    tokenType
+    expires
   }
 }
 ```
-##### REST Health Endpoint
-```shell script
-$ curl -X GET https://service-template-oxm27jqbha-uc.a.run.app/readyz \
-  | json_pp
-{
-   "ok" : true,
-   "ready" : {
-      "datastore" : true
-   }
-}
-```
+
+#### Swagger
+##### Navigate to http://localhost:8080/swagger-ui/ to interact with the REST gateway via swagger

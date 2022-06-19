@@ -1,0 +1,52 @@
+type Query {
+    whoAmI: User!
+}
+
+type Mutation {
+    authTokens(input: TokensInput): Tokens!
+
+    signup(input: SignupInput): Tokens!
+}
+
+type User {
+    id: ID!
+    email: String!
+    username: String!
+    givenName: String!
+    familyName: String!
+    nickname: String
+    picture: String
+}
+
+input TokensInput {
+    grantType: GrantType!
+    refreshToken: String
+    username: String
+    password: String
+}
+
+enum GrantType {
+    password
+    refresh_token
+}
+
+input SignupInput {
+    email: String!
+    username: String!
+    password: String!
+    givenName: String!
+    familyName: String!
+    nickname: String
+    picture: String
+}
+
+type Tokens {
+    accessToken: String!
+    refreshToken: String!
+    tokenType: TokenType!
+    expires: Float!
+}
+
+enum TokenType {
+    Bearer
+}

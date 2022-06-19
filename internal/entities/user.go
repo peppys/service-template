@@ -15,8 +15,8 @@ type User struct {
 	GivenName     string
 	FamilyName    string
 	Name          string
-	Nickname      string
-	Picture       string
+	Nickname      *string
+	Picture       *string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	DeletedAt     gorm.DeletedAt
