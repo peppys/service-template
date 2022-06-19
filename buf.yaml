@@ -1,5 +1,5 @@
 version: v1beta1
 name: buf.build/service-template/protos
 deps:
-  - buf.build/beta/googleapis
+  - buf.build/googleapis/googleapis
   - buf.build/grpc-ecosystem/grpc-gateway

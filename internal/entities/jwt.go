@@ -13,6 +13,6 @@ type UserClaims struct {
 	Name       string    `json:"name"`
 	GivenName  string    `json:"given_name"`
 	FamilyName string    `json:"family_name"`
-	Nickname   string    `json:"nickname"`
-	Picture    string    `json:"picture"`
+	Nickname   *string   `json:"nickname"`
+	Picture    *string   `json:"picture"`
 }
